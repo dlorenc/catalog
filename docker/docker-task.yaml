@@ -1,0 +1,31 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: docker
+spec:
+  inputs:
+    params:
+    - name: DOCKERFILE
+      description: The name of the Dockerfile
+      default: "Dockerfile"
+    resources:
+    - name: source
+      type: git
+  outputs:
+    resources:
+    - name: image
+      type: image
+  steps:
+  - name: build
+    image: docker:18.05
+    workingDir: /workspace/source
+    command: ["docker", "build", ".", "-t", "${outputs.resources.image.url}"]
+    volumeMounts:
+    - name: dockersock
+      mountPath: /var/run/docker.sock
+  
+  volumes:
+  - name: dockersock
+    hostPath:
+      path: /var/run/docker-dind/docker.sock
+      type: Socket
